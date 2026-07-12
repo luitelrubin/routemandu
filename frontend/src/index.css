@@ -1,0 +1,18 @@
+@import "tailwindcss";
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  @apply bg-slate-50 text-slate-900 antialiased;
+}
+
+/* Leaflet needs explicit height on its container, and we override a few
+   default control styles so they don't look out of place next to Tailwind
+   UI. */
+.leaflet-container {
+  width: 100%;
+  height: 100%;
+  font-family: inherit;
+}

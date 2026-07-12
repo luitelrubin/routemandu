@@ -1,0 +1,48 @@
+services:
+  postgres:
+    container_name: genroute_db
+    image: postgis/postgis:latest
+    environment:
+      POSTGRES_USER: ${DATABASE_USERNAME}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+      POSTGRES_DB: ${DATABASE_NAME}
+      PGDATA: /data/postgres
+
+    volumes:
+      - postgres:/var/lib/postgresql/data
+
+    ports:
+      - "5432:5432"
+
+    networks:
+      - postgres
+
+    env_file:
+      - .env
+
+    restart: unless-stopped
+
+  pgadmin:
+    container_name: genroute_dbadmin
+    image: dpage/pgadmin4:latest
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
+      PGADMIN_CONFIG_SERVER_MODE: 'false'
+
+    volumes:
+      - pgadmin:/var/lib/pgadmin
+    ports:
+      - "5050:80"
+    networks:
+      - postgres
+    restart: unless-stopped
+
+networks:
+  postgres:
+    driver: bridge
+
+volumes:
+  postgres:
+  pgadmin:
+
