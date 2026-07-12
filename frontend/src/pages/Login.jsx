@@ -62,12 +62,6 @@ const Login = ({ login, isAuthenticated }) => {
       </form>
 
       <p className="mt-4 text-sm text-slate-500">
-        Don't have an account?{" "}
-        <Link to="/register" className="font-medium text-blue-600 hover:underline">
-          Sign Up
-        </Link>
-      </p>
-      <p className="mt-2 text-sm text-slate-500">
         Forgot your password?{" "}
         <Link to="/password/reset" className="font-medium text-blue-600 hover:underline">
           Reset Password

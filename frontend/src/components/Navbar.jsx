@@ -22,11 +22,8 @@ const Navbar = ({ logout, isAuthenticated, user }) => {
 
   const guestLinks = () => (
     <Fragment>
-      <Link to="/login" className={ghostBtn}>
+      <Link to="/login" className={primaryBtn}>
         Sign in
-      </Link>
-      <Link to="/register" className={primaryBtn}>
-        Sign up
       </Link>
     </Fragment>
   );

@@ -104,28 +104,23 @@ class RaptorAlgorithm:
 
         return bag_round_stop
 
-    def accumulate_routes(self, marked_stops: List[Stop]) -> List[Tuple[Route, Stop]]:
+    def accumulate_routes(self, marked_stops: List[Stop]) -> List[Tuple[Route, int]]:
         """Accumulate routes serving marked stops from previous round, i.e. Q"""
-        route_marked_stops = {}  # i.e. Q
+        route_marked_stops = {}  # i.e. Q: Route -> min_stop_index
         for marked_stop in marked_stops:
             routes_serving_stop = self.timetable.routes.get_routes_of_stop(marked_stop)
             for route in routes_serving_stop:
-                # Check if new_stop is before existing stop in Q
-                current_stop_for_route = route_marked_stops.get(route, None)  # p'
-                if (current_stop_for_route is None) or (
-                    route.stop_index(current_stop_for_route)
-                    > route.stop_index(marked_stop)
-                ):
-                    route_marked_stops[route] = marked_stop
-        route_marked_stops = [(r, p) for r, p in route_marked_stops.items()]
-
-        return route_marked_stops
+                for idx in route.get_stop_indices(marked_stop):
+                    current_idx = route_marked_stops.get(route, None)
+                    if current_idx is None or idx < current_idx:
+                        route_marked_stops[route] = idx
+        return list(route_marked_stops.items())
 
     def traverse_routes(
         self,
         bag_round_stop: Dict[int, Dict[Stop, Label]],
         k: int,
-        route_marked_stops: List[Tuple[Route, Stop]],
+        route_marked_stops: List[Tuple[Route, int]],
     ) -> Tuple:
         """
         Iterator through the stops reachable and add all new reachable stops
@@ -134,7 +129,7 @@ class RaptorAlgorithm:
 
         :param bag_round_stop: Bag per round per stop
         :param k: current round
-        :param route_marked_stops: list of marked (route, stop) for evaluation
+        :param route_marked_stops: list of marked (route, stop_index) for evaluation
         """
         logger.debug(f"Traverse routes for round {k}")
 
@@ -144,24 +139,24 @@ class RaptorAlgorithm:
         n_improvements = 0
 
         # For each route
-        for (marked_route, marked_stop) in route_marked_stops:
+        for (marked_route, marked_stop_index) in route_marked_stops:
 
             # Current trip for this marked stop
             current_trip = None
 
             # Iterate over all stops after current stop within the current route
-            current_stop_index = marked_route.stop_index(marked_stop)
-            remaining_stops_in_route = marked_route.stops[current_stop_index:]
+            remaining_stops_in_route = marked_route.stops[marked_stop_index:]
             boarding_stop = None
 
-            for current_stop_index, current_stop in enumerate(remaining_stops_in_route):
+            for relative_index, current_stop in enumerate(remaining_stops_in_route):
+                current_stop_index = marked_stop_index + relative_index
                 # Can the label be improved in this round?
                 n_evaluations += 1
 
                 # t != _|_
                 if current_trip is not None:
                     # Arrival time at stop, i.e. arr(current_trip, next_stop)
-                    new_arrival_time = current_trip.get_stop(current_stop).dts_arr
+                    new_arrival_time = current_trip.stop_times[current_stop_index].dts_arr
                     best_arrival_time = self.bag_star[
                         current_stop
                     ].earliest_arrival_time
@@ -187,8 +182,8 @@ class RaptorAlgorithm:
                 previous_earliest_arrival_time = bag_round_stop[k][
                     current_stop
                 ].earliest_arrival_time
-                earliest_trip_stop_time = marked_route.earliest_trip_stop_time(
-                    previous_earliest_arrival_time, current_stop
+                earliest_trip_stop_time = marked_route.earliest_trip_stop_time_at_idx(
+                    previous_earliest_arrival_time, current_stop_index
                 )
                 if (
                     earliest_trip_stop_time is not None
@@ -279,8 +274,26 @@ def reconstruct_journey(destination: Stop, bag: Dict[Stop, Label]) -> Journey:
     while to_stop is not None:
         from_stop = bag[to_stop].from_stop
         bag_to_stop = bag[to_stop]
+        
+        from_stop_idx = None
+        to_stop_idx = None
+        trip = bag_to_stop.trip
+        
+        if trip is not None:
+            for idx, tst in enumerate(trip.stop_times):
+                if tst.stop == to_stop and tst.dts_arr == bag_to_stop.earliest_arrival_time:
+                    to_stop_idx = idx
+                    break
+            
+            if to_stop_idx is not None:
+                for idx in range(to_stop_idx - 1, -1, -1):
+                    if trip.stop_times[idx].stop == from_stop:
+                        from_stop_idx = idx
+                        break
+                        
         leg = Leg(
-            from_stop, to_stop, bag_to_stop.trip, bag_to_stop.earliest_arrival_time
+            from_stop, to_stop, bag_to_stop.trip, bag_to_stop.earliest_arrival_time,
+            from_stop_idx=from_stop_idx, to_stop_idx=to_stop_idx
         )
         jrny = jrny.prepend_leg(leg)
         to_stop = from_stop

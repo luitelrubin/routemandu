@@ -52,6 +52,8 @@ def attach_leg_geometry(leg: Dict) -> Dict:
         gtfs_trip_id=leg.get("gtfs_trip_id"),
         from_stop_id=leg.get("from_stop_id"),
         to_stop_id=leg.get("to_stop_id"),
+        from_stop_idx=leg.get("from_stop_idx"),
+        to_stop_idx=leg.get("to_stop_idx"),
     )
     return leg
 
@@ -60,23 +62,40 @@ def build_leg_geometry(
     gtfs_trip_id: Optional[int],
     from_stop_id: Optional[int],
     to_stop_id: Optional[int],
+    from_stop_idx: Optional[int] = None,
+    to_stop_idx: Optional[int] = None,
 ) -> Optional[Dict]:
     """Build a GeoJSON LineString for the from_stop -> to_stop portion of
     `gtfs_trip_id`. Returns None if it can't be resolved at all."""
     if gtfs_trip_id is None or from_stop_id is None or to_stop_id is None:
         return None
 
-    stop_time_rows = {
-        row["stop_id"]: row
-        for row in GtfsStopTime.objects.filter(
-            trip_id=gtfs_trip_id, stop_id__in=[from_stop_id, to_stop_id]
-        ).values("stop_id", "stop_sequence", "shape_dist_traveled", "stop__point")
-    }
-    if from_stop_id not in stop_time_rows or to_stop_id not in stop_time_rows:
-        return None
+    # Fetch all StopTimes for this trip sorted by stop_sequence
+    stop_times = list(
+        GtfsStopTime.objects.filter(trip_id=gtfs_trip_id)
+        .order_by("stop_sequence")
+        .values("stop_id", "stop_sequence", "shape_dist_traveled", "stop__point")
+    )
 
-    from_row = stop_time_rows[from_stop_id]
-    to_row = stop_time_rows[to_stop_id]
+    if (
+        from_stop_idx is not None
+        and to_stop_idx is not None
+        and from_stop_idx < len(stop_times)
+        and to_stop_idx < len(stop_times)
+    ):
+        from_row = stop_times[from_stop_idx]
+        to_row = stop_times[to_stop_idx]
+    else:
+        # Fallback
+        stop_time_rows = {
+            row["stop_id"]: row
+            for row in stop_times
+            if row["stop_id"] in [from_stop_id, to_stop_id]
+        }
+        if from_stop_id not in stop_time_rows or to_stop_id not in stop_time_rows:
+            return None
+        from_row = stop_time_rows[from_stop_id]
+        to_row = stop_time_rows[to_stop_id]
 
     coordinates = _shape_subpath(gtfs_trip_id, from_row, to_row)
     if coordinates is None:

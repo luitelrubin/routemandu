@@ -14,19 +14,64 @@ from ptas.models import PublicTransitAgency
 from ptas.permissions import isPTA
 
 
-class GTFSImportView(CreateAPIView):
-    """
-    Upload + import a GTFS zip.
+from rest_framework.views import APIView
 
-    - PTA owners upload for their own agency implicitly (request.user.pta).
-    - Admins must specify which agency the feed belongs to via `pta_id`,
-      since they don't have a `.pta` of their own.
+class GTFSImportView(APIView):
+    """
+    Manage GTFS feed (upload, export, delete, metadata).
+
+    - PTA owners manage for their own agency implicitly (request.user.pta).
+    - Admins must specify which agency the feed belongs to via `pta_id` or `pta_id` query param.
     """
 
     parser_classes = (MultiPartParser,)
-    queryset = models.Feed.objects.all()
     permission_classes = [isPTA | IsAdminUser]
-    serializer_class = serializers.FeedSerializer
+
+    def get(self, request, *args, **kwargs):
+        """Retrieve GTFS feed metadata or export the GTFS feed as a zip file"""
+        pta = getattr(request.user, "pta", None)
+        if pta is None:
+            pta_id = request.query_params.get("pta_id")
+            if pta_id:
+                try:
+                    pta = PublicTransitAgency.objects.get(pk=pta_id)
+                except PublicTransitAgency.DoesNotExist:
+                    return Response(
+                        {"error": f"Unknown agency id: {pta_id}"},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+
+        if not pta:
+            return Response(
+                {"error": "No agency associated with user"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        feed = models.Feed.objects.filter(agency__name=pta.name).first()
+
+        if request.query_params.get("export") == "true":
+            if not feed:
+                return Response(
+                    {"error": "No feed found to export"},
+                    status=status.HTTP_404_NOT_FOUND,
+                )
+            import io
+            from django.http import FileResponse
+            buffer = io.BytesIO()
+            feed.export_gtfs(buffer)
+            buffer.seek(0)
+            response = FileResponse(buffer, content_type="application/zip")
+            response["Content-Disposition"] = f'attachment; filename="{pta.name.replace(" ", "_")}_gtfs.zip"'
+            return response
+
+        if feed:
+            return Response({
+                "id": feed.id,
+                "name": feed.name,
+                "created": feed.created,
+                "exists": True
+            })
+        return Response({"exists": False})
 
     def post(self, request, *args, **kwargs):
         """Upload and import a GTFS file"""
@@ -59,8 +104,19 @@ class GTFSImportView(CreateAPIView):
         try:
             # Delete old feeds for this agency
             old_feeds = models.Feed.objects.filter(agency__name=pta.name)
-            if old_feeds:
+            if old_feeds.exists():
                 old_feeds.delete()
+
+            # Clear output timetable cache
+            import shutil
+            from django.conf import settings
+            import os
+            output_dir = os.path.join(settings.BASE_DIR, "output")
+            if os.path.exists(output_dir):
+                try:
+                    shutil.rmtree(output_dir)
+                except Exception:
+                    pass
 
             # Create new feed
             feed = models.Feed.objects.create(name=name)
@@ -92,3 +148,48 @@ class GTFSImportView(CreateAPIView):
         except Exception as e:
             traceback.print_exc()
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, *args, **kwargs):
+        """Delete GTFS feed and associated database records for agency"""
+        pta = getattr(request.user, "pta", None)
+        if pta is None:
+            pta_id = request.data.get("pta_id") or request.query_params.get("pta_id")
+            if pta_id:
+                try:
+                    pta = PublicTransitAgency.objects.get(pk=pta_id)
+                except PublicTransitAgency.DoesNotExist:
+                    return Response(
+                        {"error": f"Unknown agency id: {pta_id}"},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+
+        if not pta:
+            return Response(
+                {"error": "No agency associated with user"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        old_feeds = models.Feed.objects.filter(agency__name=pta.name)
+        if old_feeds.exists():
+            old_feeds.delete()
+
+            # Clear output timetable cache
+            import shutil
+            from django.conf import settings
+            import os
+            output_dir = os.path.join(settings.BASE_DIR, "output")
+            if os.path.exists(output_dir):
+                try:
+                    shutil.rmtree(output_dir)
+                except Exception:
+                    pass
+
+            return Response(
+                {"message": "GTFS feed deleted successfully"},
+                status=status.HTTP_200_OK,
+            )
+
+        return Response(
+            {"error": "No feed found for this agency"},
+            status=status.HTTP_404_NOT_FOUND,
+        )

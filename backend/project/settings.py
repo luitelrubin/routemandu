@@ -79,6 +79,9 @@ DJOSER = {
         "user_create": "users.serializers.UserCreateSerializer",
         "user_delete": "djoser.serializers.UserDeleteSerializer",
     },
+    "PERMISSIONS": {
+        "user_create": ["rest_framework.permissions.IsAdminUser"],
+    },
 }
 
 DOMAIN = "localhost:5173"

@@ -346,6 +346,24 @@ class Route:
     stops = attrs.field(default=attrs.Factory(list))
     stop_order = attrs.field(default=attrs.Factory(dict))
 
+    def get_stop_indices(self, stop: Stop) -> List[int]:
+        """Get all indices of stop in this route"""
+        return [idx for idx, s in enumerate(self.stops) if s == stop]
+
+    def earliest_trip_at_idx(self, dts_arr: int, stop_idx: int) -> Trip:
+        """Returns earliest trip after time dts (sec) at stop_idx"""
+        trip_stop_times = [trip.stop_times[stop_idx] for trip in self.trips]
+        trip_stop_times = [tst for tst in trip_stop_times if tst.dts_dep >= dts_arr]
+        trip_stop_times = sorted(trip_stop_times, key=attrgetter("dts_dep"))
+        return trip_stop_times[0].trip if len(trip_stop_times) > 0 else None
+
+    def earliest_trip_stop_time_at_idx(self, dts_arr: int, stop_idx: int) -> TripStopTime:
+        """Returns earliest trip stop time after time dts (sec) at stop_idx"""
+        trip_stop_times = [trip.stop_times[stop_idx] for trip in self.trips]
+        trip_stop_times = [tst for tst in trip_stop_times if tst.dts_dep >= dts_arr]
+        trip_stop_times = sorted(trip_stop_times, key=attrgetter("dts_dep"))
+        return trip_stop_times[0] if len(trip_stop_times) > 0 else None
+
     def __hash__(self):
         return hash(self.id)
 
@@ -507,6 +525,8 @@ class Leg:
     earliest_arrival_time: int
     fare: int = 0
     n_trips: int = 0
+    from_stop_idx: int = None
+    to_stop_idx: int = None
 
     @property
     def criteria(self):
@@ -516,6 +536,8 @@ class Leg:
     @property
     def dep(self):
         """Departure time"""
+        if self.from_stop_idx is not None and self.trip:
+            return self.trip.stop_times[self.from_stop_idx].dts_dep
         return [
             tst.dts_dep for tst in self.trip.stop_times if self.from_stop == tst.stop
         ][0]
@@ -523,6 +545,8 @@ class Leg:
     @property
     def arr(self):
         """Arrival time"""
+        if self.to_stop_idx is not None and self.trip:
+            return self.trip.stop_times[self.to_stop_idx].dts_arr
         return [
             tst.dts_arr for tst in self.trip.stop_times if self.to_stop == tst.stop
         ][0]
@@ -573,6 +597,8 @@ class Leg:
             from_platform_code=self.from_stop.platform_code,
             to_platform_code=self.to_stop.platform_code,
             fare=self.fare,
+            from_stop_idx=self.from_stop_idx,
+            to_stop_idx=self.to_stop_idx,
         )
 
 
