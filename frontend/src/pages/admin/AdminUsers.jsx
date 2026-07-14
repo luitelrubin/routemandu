@@ -82,7 +82,7 @@ const AdminUsers = () => {
       </div>
 
       {error && (
-        <p className="mb-3 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700 break-words">
+        <p className="mb-3 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700 wrap-break-words">
           {error}
         </p>
       )}
@@ -172,7 +172,8 @@ const AdminUsers = () => {
                   <td className="px-3 py-2 text-right">
                     <button
                       onClick={() => handleDelete(user)}
-                      className="text-xs font-semibold text-red-600 hover:underline"
+                      className="text-xs font-semibold text-red-600 hover:underline disabled:text-gray-600 disabled:cursor-not-allowed"
+                      disabled={user.is_staff}
                     >
                       Delete
                     </button>

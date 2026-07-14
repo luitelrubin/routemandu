@@ -14,7 +14,7 @@
             ],
             "django": true,
             "autoStartBrowser": false,
-            "program": "${workspaceFolder}\\backend-updated\\backend\\manage.py"
+            "program": "${workspaceFolder}\\backend\\manage.py"
         }
     ]
 }

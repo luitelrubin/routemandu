@@ -1,6 +1,7 @@
 import { useRef, useState, useEffect } from "react";
 import { connect } from "react-redux";
 import { uploadGtfsFeed, getGtfsFeedInfo, deleteGtfsFeed, exportGtfsFeed } from "../../api/gtfs";
+import { updateAgency } from "../../api/admin";
 
 const PTADashboard = ({ user }) => {
   const pta = user?.pta;
@@ -12,11 +13,15 @@ const PTADashboard = ({ user }) => {
   const [uploading, setUploading] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [updatingAgency, setUpdatingAgency] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
 
   const [feedInfo, setFeedInfo] = useState(null);
   const [loadingFeedInfo, setLoadingFeedInfo] = useState(true);
+
+  const [agencyName, setAgencyName] = useState("");
+  const [agencyColor, setAgencyColor] = useState("#2563eb");
 
   const fetchFeedInfo = async () => {
     try {
@@ -32,6 +37,8 @@ const PTADashboard = ({ user }) => {
   useEffect(() => {
     if (pta) {
       fetchFeedInfo();
+      setAgencyName(pta.name);
+      setAgencyColor(pta.color);
     } else {
       setLoadingFeedInfo(false);
     }
@@ -108,21 +115,72 @@ const PTADashboard = ({ user }) => {
     }
   };
 
+  const handleUpdateAgency = async (e) => {
+    e.preventDefault();
+    setUpdatingAgency(true);
+    setError(null);
+    setResult(null);
+    try {
+      await updateAgency(pta.id, { name: agencyName, color: agencyColor });
+      setResult({ message: "Agency updated successfully!" });
+    } catch (err) {
+      setError(err?.response?.data ? JSON.stringify(err.response.data) : "Failed to update agency.");
+    } finally {
+      setUpdatingAgency(false);
+    }
+  };
+
   return (
     <div className="mx-auto w-full max-w-2xl flex-1 px-4 py-8">
       <h1 className="text-2xl font-bold text-slate-900">My Agency</h1>
 
       {pta ? (
-        <div className="mt-4 flex items-center gap-3 rounded-md border border-slate-200 p-4">
-          <span
-            className="h-8 w-8 shrink-0 rounded-full border border-slate-200"
-            style={{ backgroundColor: pta.color }}
-          />
-          <div>
-            <p className="font-semibold text-slate-900">{pta.name}</p>
-            <p className="text-xs text-slate-500">Agency ID: {pta.id}</p>
+        <form onSubmit={handleUpdateAgency} className="mt-4 rounded-md border border-slate-200 p-4 flex flex-col gap-4">
+          <div className="flex items-center gap-3">
+            <span
+              className="h-8 w-8 shrink-0 rounded-full border border-slate-200"
+              style={{ backgroundColor: agencyColor }}
+            />
+            <div>
+              <p className="font-semibold text-slate-900">{agencyName || pta.name}</p>
+              <p className="text-xs text-slate-500">Agency ID: {pta.id}</p>
+            </div>
           </div>
-        </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wide text-slate-500 mb-1">
+                Agency Name
+              </label>
+              <input
+                required
+                type="text"
+                value={agencyName}
+                onChange={(e) => setAgencyName(e.target.value)}
+                className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wide text-slate-500 mb-1">
+                Route Color
+              </label>
+              <input
+                type="color"
+                value={agencyColor}
+                onChange={(e) => setAgencyColor(e.target.value)}
+                className="h-9 w-20 rounded border border-slate-300 cursor-pointer"
+              />
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            disabled={updatingAgency}
+            className="w-full rounded-md bg- px-4 py-2 bg-blue-600 text-sm font-semibold text-white hover:bg-blue-800 disabled:opacity-60 transition-colors"
+          >
+            {updatingAgency ? "Saving..." : "Save Agency Details"}
+          </button>
+        </form>
       ) : (
         <p className="mt-4 text-sm text-slate-500">
           Your account isn't linked to a transit agency yet.
@@ -191,7 +249,7 @@ const PTADashboard = ({ user }) => {
           </label>
           <input
             type="text"
-            placeholder={`e.g. ${pta?.name || "Agency"} - Summer 2026`}
+            placeholder={`e.g. ${agencyName || pta?.name || "Agency"} - Summer 2026`}
             value={name}
             onChange={(e) => setName(e.target.value)}
             className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"

@@ -1,10 +1,12 @@
 import { useState } from "react";
 import AdminUsers from "./AdminUsers";
 import AdminAgencies from "./AdminAgencies";
+import AdminGtfs from "./AdminGtfs";
 
 const tabs = [
   { key: "users", label: "Users", Component: AdminUsers },
   { key: "agencies", label: "Agencies", Component: AdminAgencies },
+  { key: "gtfs", label: "GTFS Feeds", Component: AdminGtfs },
 ];
 
 const AdminDashboard = () => {

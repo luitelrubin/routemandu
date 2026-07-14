@@ -22,7 +22,7 @@ Geometry is built in three tiers, from best to worst available data:
 3. If the trip has no Shape at all, fall back to straight lines through
    the actual stops the trip makes between the two endpoints.
 """
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 
 from multigtfs.models import StopTime as GtfsStopTime, Trip as GtfsTrip
 

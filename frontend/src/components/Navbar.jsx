@@ -32,7 +32,7 @@ const Navbar = ({ logout, isAuthenticated, user }) => {
     <Fragment>
       {user?.is_staff && (
         <Link to="/admin" className={navLink}>
-          Admin
+          Admin Panel
         </Link>
       )}
       {user?.pta && (

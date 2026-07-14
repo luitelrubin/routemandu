@@ -59,13 +59,22 @@ const AdminAgencies = () => {
     }
   };
 
-  const handleColorChange = async (agency, color) => {
+  const [editingId, setEditingId] = useState(null);
+  const [editForm, setEditForm] = useState({ name: "", color: "" });
+
+  const startEdit = (agency) => {
+    setEditingId(agency.id);
+    setEditForm({ name: agency.name, color: agency.color });
+  };
+
+  const handleUpdate = async (agencyId) => {
     try {
-      await updateAgency(agency.id, { color });
+      await updateAgency(agencyId, { name: editForm.name, color: editForm.color });
+      setEditingId(null);
       await refresh();
     } catch (err) {
       console.error(err);
-      setError("Couldn't update agency color.");
+      setError("Couldn't update agency.");
     }
   };
 
@@ -164,31 +173,75 @@ const AdminAgencies = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {agencies.map((agency) => (
-                <tr key={agency.id}>
-                  <td className="px-3 py-2 font-mono text-xs text-slate-500">{agency.id}</td>
-                  <td className="px-3 py-2 text-slate-800">{agency.name}</td>
-                  <td className="px-3 py-2">
-                    <input
-                      type="color"
-                      className="h-7 w-11 rounded border border-slate-300"
-                      value={agency.color}
-                      onChange={(e) => handleColorChange(agency, e.target.value)}
-                    />
-                  </td>
-                  <td className="px-3 py-2 text-slate-600">
-                    {agency.owner_detail?.email || agency.owner}
-                  </td>
-                  <td className="px-3 py-2 text-right">
-                    <button
-                      onClick={() => handleDelete(agency)}
-                      className="text-xs font-semibold text-red-600 hover:underline"
-                    >
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              ))}
+              {agencies.map((agency) => {
+                const isEditing = editingId === agency.id;
+                return (
+                  <tr key={agency.id}>
+                    <td className="px-3 py-2 font-mono text-xs text-slate-500">{agency.id}</td>
+                    <td className="px-3 py-2 text-slate-800">
+                      {isEditing ? (
+                        <input
+                          required
+                          className="rounded-md border border-slate-300 px-2 py-1 text-sm w-full"
+                          value={editForm.name}
+                          onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                        />
+                      ) : (
+                        agency.name
+                      )}
+                    </td>
+                    <td className="px-3 py-2">
+                      <input
+                        type="color"
+                        className="h-7 w-11 rounded border border-slate-300"
+                        value={isEditing ? editForm.color : agency.color}
+                        disabled={!isEditing}
+                        onChange={(e) => {
+                          if (isEditing) {
+                            setEditForm({ ...editForm, color: e.target.value });
+                          }
+                        }}
+                      />
+                    </td>
+                    <td className="px-3 py-2 text-slate-600">
+                      {agency.owner_detail?.email || agency.owner}
+                    </td>
+                    <td className="px-3 py-2 text-right">
+                      {isEditing ? (
+                        <div className="flex justify-end gap-2">
+                          <button
+                            onClick={() => handleUpdate(agency.id)}
+                            className="text-xs font-semibold text-green-600 hover:underline"
+                          >
+                            Save
+                          </button>
+                          <button
+                            onClick={() => setEditingId(null)}
+                            className="text-xs font-semibold text-slate-500 hover:underline"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="flex justify-end gap-2">
+                          <button
+                            onClick={() => startEdit(agency)}
+                            className="text-xs font-semibold text-blue-600 hover:underline"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => handleDelete(agency)}
+                            className="text-xs font-semibold text-red-600 hover:underline"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
