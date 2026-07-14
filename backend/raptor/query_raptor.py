@@ -97,11 +97,12 @@ def run_raptor(
         raise KeyError(f"Unknown origin station: {origin_station}")
 
     from_stops = origin.stops
-    # destination_stops = {station.name: station.stops for station in timetable.stations}
-    # destination_stops.pop(origin.name, None)
+
+    destination_stops = {station.name: station.stops for station in timetable.stations}
+    destination_stops.pop(origin.name, None)
     # Changes
-    destination_stops = {station.id: station.stops for station in timetable.stations}
-    destination_stops.pop(origin.id, None)
+    # destination_stops = {station.id: station.stops for station in timetable.stations}
+    # destination_stops.pop(origin.id, None)
 
     raptor = RaptorAlgorithm(timetable)
     bag_round_stop = raptor.run(from_stops, dep_secs, rounds)

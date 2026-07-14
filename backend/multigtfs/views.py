@@ -124,7 +124,7 @@ class GTFSImportView(APIView):
             agency = models.Agency.objects.filter(feed=feed).first()
 
             if agency:
-                agency.name = pta.name
+                # agency.name = pta.name
                 agency.email = pta.owner.email
                 agency.save()
             feed_info = models.FeedInfo.objects.filter(feed=feed).first()

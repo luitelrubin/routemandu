@@ -37,7 +37,7 @@ def validate_departure_date(departure_date: str) -> str:
         )
     return departure_date
 
-@lru_cache(maxsize=32)
+# @lru_cache(maxsize=32)
 def get_timetable_for_date(base_folder: str, departure_date: str) -> Timetable:
     """
     Get the timetable valid for a specific GTFS service date (yyyymmdd).
@@ -63,7 +63,7 @@ def get_timetable_for_date(base_folder: str, departure_date: str) -> Timetable:
     return timetable
 
 
-@lru_cache(maxsize=8)
+# @lru_cache(maxsize=8)
 def get_timetable(input_folder: str) -> Timetable:
     """
     Load the cached timetable for `input_folder`, keeping it in memory for
@@ -72,7 +72,7 @@ def get_timetable(input_folder: str) -> Timetable:
     """
     return read_timetable(input_folder)
 
-@lru_cache(maxsize=32)
+# @lru_cache(maxsize=32)
 def get_timetable_for_date(base_folder: str, departure_date: str) -> Timetable:
     """
     Get the timetable valid for a specific GTFS service date (yyyymmdd).
@@ -115,6 +115,8 @@ def run_raptor(
     from_stops = origin.stops
     destination_stops = {station.id: station.stops for station in timetable.stations}
     destination_stops.pop(origin.id, None)
+    # destination_stops = {station.name: station.stops for station in timetable.stations}
+    # destination_stops.pop(origin.name, None)
 
     raptor = RaptorAlgorithm(timetable)
     bag_round_stop = raptor.run(from_stops, dep_secs, rounds)

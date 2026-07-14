@@ -84,7 +84,7 @@ class RaptorQueryView(APIView):
         origin_station = request.query_params.get("origin")
         destination_station = request.query_params.get("destination")
         departure_time = request.query_params.get("time", "08:35:00")
-        departure_date = request.query_params.get("date")  # optional, yyyymmdd
+        departure_date = request.query_params.get("date")
         input_folder = request.query_params.get("input", "output")
 
         if not origin_station or not destination_station:

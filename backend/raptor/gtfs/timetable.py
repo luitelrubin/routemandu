@@ -209,6 +209,11 @@ def gtfs_to_pyraptor_timetable(
         stop = Stop(s.stop_id, s.stop_name, station)
         station.add_stop(stop)
         stops.add(stop)
+        # station_key = s.name.strip().casefold()
+        # station = stations.add(Station(station_key, s.station_name))
+        # stop = Stop(s.stop_id, s.stop_name, station)
+        # station.add_stop(stop)
+        # stops.add(stop)
 
     # Stop Times
     stop_times = defaultdict(list)

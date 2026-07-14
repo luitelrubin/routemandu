@@ -148,13 +148,23 @@ class Stop(Base):
         stations = super(Stop, cls).import_txt(StringIO(txt), feed, is_station)
         logger.info("Imported %d station stops", stations)
 
+        # def is_stop(pairs):
+        #     """Does the row represent a stop?"""
+        #     for name, val in pairs:
+        #         if name == "location_type":
+        #             return val != "1"
+        #     return True
         def is_stop(pairs):
-            """Does the row represent a stop?"""
+            """Does the row represent a stop and is it new?"""
+            stop_id = None
             for name, val in pairs:
-                if name == "location_type":
-                    return val != "1"
-            return True
-
+                if name == "location_type" and val == "1":
+                    return False  # it's a station, not a stop
+                if name == "stop_id":
+                    stop_id = val
+            # Skip if stop_id already exists
+            return stop_id and not Stop.objects.filter(stop_id=stop_id, feed=feed).exists()
+        
         logger.info("Importing non-station stops")
         stops = super(Stop, cls).import_txt(StringIO(txt), feed, is_stop)
         logger.info("Imported %d non-station stops", stops)

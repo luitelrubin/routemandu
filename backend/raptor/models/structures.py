@@ -1,4 +1,5 @@
 """Datatypes"""
+from __future__ import annotations
 from itertools import compress
 from collections import defaultdict
 from operator import attrgetter
@@ -11,7 +12,6 @@ import numpy as np
 from loguru import logger
 
 from raptor.util import sec2str
-
 
 def same_type_and_id(first, second):
     """Same type and ID"""
@@ -158,14 +158,14 @@ class Stations:
     
     def get(self, station: Station):
         """Get station"""
-        if isinstance(station, Station):
-            station = station.id
+        # if isinstance(station, Station):
+        #     station = station.id
+        if isinstance(station, Station): # Rubin
+            station = station.id # get by name: Rubin
         if station in self.set_idx:
             return self.set_idx[station]
-            # return None
         if station in self.set_name_idx:
             return self.set_name_idx[station]
-        # return self.set_idx[station]
         return None
 
     def get_stops(self, station_name):

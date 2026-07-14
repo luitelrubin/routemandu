@@ -21,7 +21,8 @@ from django.conf import settings
 from django.core.management.base import BaseCommand
 
 from multigtfs.models import Agency, Feed, Service
-
+from raptor.gtfs.timetable import read_gtfs_timetable, gtfs_to_pyraptor_timetable
+from datetime import datetime
 
 class Command(BaseCommand):
     help = 'Import a GTFS Feed'
@@ -96,3 +97,10 @@ class Command(BaseCommand):
                 feed.save()
 
         self.stdout.write("Successfully imported Feed %s\n" % (feed))
+
+        # try:
+        #     timetable=read_gtfs_timetable(datetime.now().strftime("%Y%m%d"))
+        #     gtfs_to_pyraptor_timetable(timetable)
+        # except Exception as ex:
+        #     self.stdout.write("Error creating timetable")
+
