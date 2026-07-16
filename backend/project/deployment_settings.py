@@ -3,7 +3,7 @@ from .base_settings import *
 from decouple import config
 import os
 
-ALLOWED_HOSTS = config("PROD_ALLOWED_HOST")
+ALLOWED_HOSTS = config("PROD_ALLOWED_HOST").split(",")
 CSRF_TRUSTED_ORIGINS = [f"https://{config('PROD_ALLOWED_HOST')}"]
 DEBUG=False
 SILKY_PYTHON_PROFILER = False
