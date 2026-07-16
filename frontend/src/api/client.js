@@ -1,6 +1,6 @@
 import axios from "axios";
 import createAuthRefreshInterceptor from "axios-auth-refresh";
-const isDevelopment = import.meta.env.mode === "development";
+const isDevelopment = import.meta.env.MODE === "development";
 export const API_URL = isDevelopment ? import.meta.env.VITE_DEV_URL : import.meta.env.VITE_PROD_URL;
 
 const client = axios.create({
