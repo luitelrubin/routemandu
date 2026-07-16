@@ -37,7 +37,8 @@ STORAGES = {
 DATABASES = {
     "default": dj_database_url.config(
         default=config("PROD_DATABASE_URL"),
-        conn_max_age=600
+        engine="django.contrib.gis.db.backends.postgis",
+        conn_max_age=600,
     )
 }
 
