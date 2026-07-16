@@ -19,3 +19,8 @@ dependencies = [
     "psycopg[binary]>=3.3.4",
     "python-decouple>=3.8",
 ]
+
+[dependency-groups]
+dev = [
+    "django-debug-toolbar>=7.0.0",
+]

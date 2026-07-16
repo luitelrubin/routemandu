@@ -1,5 +1,0 @@
-route_id,agency_id,route_short_name,route_long_name,route_desc,route_type,route_url,route_color,route_text_color,route_sort_order,continuous_pickup,continuous_drop_off
-DRT001,DRT,pnt2ktm,Panauti to Kathmandu,,3,,FFCC99,000000,,,
-DRT002,DRT,ktm2pnt,Kathmandu to Panauti,,3,,FFCC00,000000,,,
-MNGR001,MNGR,rrclk,Ring Road Clockwise,,3,,AAAA00,000000,,,
-MNGR002,MNGR,rraclk,Ring Road Anti Clockwise,,3,,FF0000,000000,,,
