@@ -8,6 +8,9 @@ wheels/
 
 # Virtual environments
 .venv
+
+# Cached files and non essentials
 ./output/*
-.idea
+./staticfiles/*
+
 
