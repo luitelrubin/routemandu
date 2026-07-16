@@ -38,7 +38,7 @@ DATABASES = {
     "default": dj_database_url.config(
         default=config("PROD_DATABASE_URL"),
         engine="django.contrib.gis.db.backends.postgis",
-        conn_max_age=600,
+        conn_max_age=0,
     )
 }
 EMAIL_BACKEND = config("EMAIL_BACKEND")
