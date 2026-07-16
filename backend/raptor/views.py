@@ -7,7 +7,7 @@ from multigtfs.models import Stop
 
 from raptor.serializers import serialize_journey
 from raptor.services import query_journey, InvalidDateError, UnknownStationError
-
+from silk.profiling.profiler import silk_profile
 
 class StationSearchView(APIView):
     """
@@ -80,6 +80,7 @@ class RaptorQueryView(APIView):
     # require authentication like the rest of the API.
     permission_classes = [AllowAny]
 
+    @silk_profile(name='Journey search')
     def get(self, request, *args, **kwargs):
         origin_station = request.query_params.get("origin")
         destination_station = request.query_params.get("destination")

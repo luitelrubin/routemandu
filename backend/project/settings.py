@@ -43,6 +43,8 @@ INSTALLED_APPS = [
     "djoser",
     "corsheaders",
     "templated_email",
+    "debug_toolbar",
+    "silk",
     # Custom
     "users.apps.UsersConfig",
     "ptas.apps.PtasConfig",
@@ -100,7 +102,9 @@ MIDDLEWARE = [
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
+    "silk.middleware.SilkyMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "debug_toolbar.middleware.DebugToolbarMiddleware",
 ]
 
 ROOT_URLCONF = "project.urls"
@@ -180,3 +184,10 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = "static/"
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+INTERNAL_IPS = [
+    "127.0.0.1",
+]
+
+SILKY_PYTHON_PROFILER = True
