@@ -1,11 +1,12 @@
 import dj_database_url
-from .settings import *
+from .base_settings import *
 from decouple import config
 import os
 
 ALLOWED_HOSTS = config("PROD_ALLOWED_HOST")
 CSRF_TRUSTED_ORIGINS = [f"https://{config('PROD_ALLOWED_HOST')}"]
 DEBUG=False
+SILKY_PYTHON_PROFILER = False
 SECRET_KEY = config('PROD_SECRET_KEY')
 
 MIDDLEWARE = [
@@ -39,3 +40,13 @@ DATABASES = {
         conn_max_age=600
     )
 }
+
+SIMPLE_JWT = {
+    "AUTH_HEADER_TYPES": ("JWT",),
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=5),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
+}
+
+GDAL_LIBRARY_PATH = config("GDAL_LIBRARY_PATH")
+PROJ_LIB = config("PROJ_LIB")
+
