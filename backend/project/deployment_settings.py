@@ -10,10 +10,10 @@ SILKY_PYTHON_PROFILER = False
 SECRET_KEY = config('PROD_SECRET_KEY')
 
 MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
-    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -23,7 +23,7 @@ MIDDLEWARE = [
     "debug_toolbar.middleware.DebugToolbarMiddleware",
 ]
 
-# CORS_ALLOWED_ORIGINS = []
+CORS_ALLOWED_ORIGINS = config("PROD_CORS_ALLOWED_ORIGIN").split(",")
 
 STORAGES = {
     "default":{
