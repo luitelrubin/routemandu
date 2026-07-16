@@ -11,4 +11,3 @@ wheels/
 
 # Cached files and non essentials
 ./output/*
-staticfiles/*
