@@ -41,6 +41,7 @@ DATABASES = {
         conn_max_age=0,
     )
 }
+DOMAIN = config("CLIENT-DOMAIN")
 EMAIL_BACKEND = config("EMAIL_BACKEND")
 EMAIL_HOST = config("EMAIL_HOST")
 EMAIL_HOST_USER = config("EMAIL_HOST_USER")
