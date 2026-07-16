@@ -4,7 +4,7 @@ from decouple import config
 import os
 
 ALLOWED_HOSTS = config("PROD_ALLOWED_HOST").split(",")
-CSRF_TRUSTED_ORIGINS = [f"https://{config('PROD_ALLOWED_HOST')}"]
+CSRF_TRUSTED_ORIGINS = [f"https://{host}" for host in ALLOWED_HOSTS if host]
 DEBUG=False
 SILKY_PYTHON_PROFILER = False
 SECRET_KEY = config('PROD_SECRET_KEY')
