@@ -111,7 +111,7 @@ class GTFSImportView(APIView):
             import shutil
             from django.conf import settings
             import os
-            output_dir = os.path.join(settings.BASE_DIR, "output")
+            output_dir = os.path.join(settings.BASE_DIR, "/backend/output")
             if os.path.exists(output_dir):
                 try:
                     shutil.rmtree(output_dir)
