@@ -820,7 +820,6 @@ class Journey:
         """Convert journey to list of legs as dict"""
         return [leg.to_dict(leg_index=idx) for idx, leg in enumerate(self.legs)]
 
-
 def pareto_set(labels: List[Label], keep_equal=False):
     """
     Find the pareto-efficient points

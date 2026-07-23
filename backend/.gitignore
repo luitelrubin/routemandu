@@ -10,4 +10,4 @@ wheels/
 .venv
 
 # Cached files and non essentials
-./output/*
+output/*
