@@ -46,5 +46,5 @@ export const mergeLegsByTrip = (legs = []) => {
       });
     }
   }
-  return rides.map((ride, i) => ({ ...ride, color: colorForRideIndex(i) }));
+  return rides.map((ride, i) => ({ ...ride, color: ride.pta_color || colorForRideIndex(i) }));
 };

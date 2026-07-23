@@ -29,6 +29,8 @@ from typing import Dict, List, Optional, Tuple
 from django.db.models import FloatField, Func
 from multigtfs.models import ShapePoint, StopTime as GtfsStopTime, Trip as GtfsTrip
 
+from ptas.models import PublicTransitAgency
+
 from raptor.models.structures import Journey
 
 # (lon, lat) as plain floats - deliberately NOT a GEOS Point. Indexing into
@@ -75,6 +77,7 @@ class _GeometryContext:
     shape_points_by_shape: Dict[int, List[Tuple[float, float, Optional[float]]]] = field(
         default_factory=dict
     )
+    pta_color_by_trip: Dict[int, Optional[str]] = field(default_factory=dict)
 
 
 def serialize_journey(journey: Journey) -> Dict:
@@ -133,11 +136,23 @@ def _build_geometry_context(legs: List[Dict]) -> _GeometryContext:
         )
         for shape_id, x, y, traveled in shape_point_rows:
             shape_points_by_shape[shape_id].append((x, y, traveled))
+    agency_name_by_trip: Dict[int, Optional[str]] = dict(
+        GtfsTrip.objects.filter(pk__in=trip_ids).values_list("id", "route__agency__name")
+    )
+    agency_names = {name for name in agency_name_by_trip.values() if name}
+    color_by_agency_name: Dict[str, str] = dict(
+        PublicTransitAgency.objects.filter(name__in=agency_names).values_list("name", "color")
+    )
+    pta_color_by_trip = {
+        trip_id: color_by_agency_name.get(agency_name)
+        for trip_id, agency_name in agency_name_by_trip.items()
+    }
 
     return _GeometryContext(
         stop_times_by_trip=dict(stop_times_by_trip),
         shape_id_by_trip=shape_id_by_trip,
         shape_points_by_shape=dict(shape_points_by_shape),
+        pta_color_by_trip=pta_color_by_trip
     )
 
 
@@ -153,6 +168,7 @@ def attach_leg_geometry(leg: Dict, context: Optional[_GeometryContext] = None) -
         from_stop_idx=leg.get("from_stop_idx"),
         to_stop_idx=leg.get("to_stop_idx"),
     )
+    leg["pta_color"] = context.pta_color_by_trip.get(leg.get("gtfs_trip_id"))
     return leg
 
 
