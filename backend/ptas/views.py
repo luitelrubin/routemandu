@@ -21,9 +21,10 @@ class PublicTransitAgencyViewSet(ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
+        queryset = self.queryset.all()
         if user.is_staff:
-            return self.queryset
-        return self.queryset.filter(owner=user)
+            return queryset
+        return queryset.filter(owner=user)
 
     def get_serializer_class(self):
         if self.request.user.is_staff:
