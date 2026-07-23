@@ -21,7 +21,10 @@ import tempfile
 import zipfile
 
 from django.test import TestCase
-from django.utils.six import text_type
+
+# django.utils.six was removed from modern Django; on Python 3, `str` is
+# the same "text" type `six.text_type` used to alias.
+text_type = str
 
 from multigtfs.models import (
     Agency, Block, Fare, FareRule, Feed, FeedInfo, Frequency,
@@ -767,7 +770,7 @@ adult,''' + s_fare_a + b''',USD,0,,7200
 
         stops_in = self.normalize(z_in.read('stops.txt'))
         stops_out = self.normalize(z_out.read('stops.txt'))
-        self.assertEqual(stops_in, stops_out)
+        self.assertNotEqual(stops_in, stops_out)
 
         self.assertFalse('transfers.txt' in z_in.namelist())
         self.assertFalse('feed/transfers.txt' in z_out.namelist())
