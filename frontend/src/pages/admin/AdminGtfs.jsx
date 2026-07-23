@@ -11,6 +11,25 @@ const AdminGtfs = () => {
   const [exportingId, setExportingId] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
 
+  // System-wide GTFS feed: a single feed that may contain details for any
+  // number of agencies at once (e.g. an agency.txt with several rows),
+  // managed independently of any one agency's own feed.
+  const [systemFeed, setSystemFeed] = useState({ exists: false });
+  const [systemError, setSystemError] = useState(null);
+  const [systemUploading, setSystemUploading] = useState(false);
+  const [systemExporting, setSystemExporting] = useState(false);
+  const [systemDeleting, setSystemDeleting] = useState(false);
+
+  const refreshSystemFeed = async () => {
+    try {
+      const info = await getGtfsFeedInfo();
+      setSystemFeed(info);
+    } catch (err) {
+      console.error("Failed to load system GTFS feed info", err);
+      setSystemFeed({ exists: false });
+    }
+  };
+
   const refresh = async () => {
     setLoading(true);
     setError(null);
@@ -41,7 +60,57 @@ const AdminGtfs = () => {
 
   useEffect(() => {
     refresh();
+    refreshSystemFeed();
   }, []);
+
+  const handleSystemUpload = async (file) => {
+    if (!file) return;
+    setSystemUploading(true);
+    setSystemError(null);
+    try {
+      await uploadGtfsFeed({ file });
+      await refreshSystemFeed();
+    } catch (err) {
+      setSystemError(err?.response?.data?.error || "GTFS import failed.");
+    } finally {
+      setSystemUploading(false);
+    }
+  };
+
+  const handleSystemExport = async () => {
+    setSystemExporting(true);
+    setSystemError(null);
+    try {
+      const blob = await exportGtfsFeed();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", "system_gtfs.zip");
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode.removeChild(link);
+    } catch (err) {
+      setSystemError("Failed to export the system GTFS feed.");
+    } finally {
+      setSystemExporting(false);
+    }
+  };
+
+  const handleSystemDelete = async () => {
+    if (!window.confirm("Delete the system-wide GTFS feed? This will remove all agencies, routes, and schedule data it contains.")) {
+      return;
+    }
+    setSystemDeleting(true);
+    setSystemError(null);
+    try {
+      await deleteGtfsFeed();
+      await refreshSystemFeed();
+    } catch (err) {
+      setSystemError(err?.response?.data?.error || "Failed to delete the system GTFS feed.");
+    } finally {
+      setSystemDeleting(false);
+    }
+  };
 
   const handleUpload = async (agencyId, file) => {
     if (!file) return;
@@ -95,11 +164,72 @@ const AdminGtfs = () => {
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-semibold text-slate-900">GTFS Feeds Management</h2>
         <button
-          onClick={refresh}
+          onClick={() => { refresh(); refreshSystemFeed(); }}
           className="rounded-md border border-slate-300 px-3 py-1.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
         >
           Refresh
         </button>
+      </div>
+
+      <div className="mb-6 rounded-md border border-slate-200 p-4">
+        <h3 className="text-sm font-semibold text-slate-900">System GTFS Feed</h3>
+        <p className="mt-1 text-xs text-slate-500">
+          A single GTFS feed covering any number of agencies at once (e.g. a zip whose
+          agency.txt lists several agencies), separate from individual agencies' own feeds below.
+        </p>
+
+        {systemError && (
+          <p className="mt-3 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700 break-words">
+            {systemError}
+          </p>
+        )}
+
+        <div className="mt-3 flex flex-wrap items-center gap-3">
+          <label className={`cursor-pointer rounded-md bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-100 transition-colors ${systemUploading ? "opacity-60 pointer-events-none" : ""}`}>
+            {systemUploading ? "Uploading..." : "Upload GTFS"}
+            <input
+              type="file"
+              accept=".zip"
+              className="hidden"
+              onChange={(e) => handleSystemUpload(e.target.files?.[0])}
+              disabled={systemUploading}
+            />
+          </label>
+
+          <button
+            onClick={handleSystemExport}
+            disabled={!systemFeed?.exists || systemExporting}
+            className="rounded-md border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50 transition-colors"
+          >
+            {systemExporting ? "Exporting..." : "Export GTFS"}
+          </button>
+
+          <button
+            onClick={handleSystemDelete}
+            disabled={!systemFeed?.exists || systemDeleting}
+            className="rounded-md border border-red-200 px-3 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-50 disabled:opacity-50 transition-colors"
+          >
+            {systemDeleting ? "Deleting..." : "Delete GTFS"}
+          </button>
+        </div>
+
+        <div className="mt-3 text-xs text-slate-600">
+          {systemFeed?.exists ? (
+            <>
+              <div>
+                <span className="font-semibold">{systemFeed.name}</span>{" "}
+                <span className="text-slate-400">uploaded {new Date(systemFeed.created).toLocaleString()}</span>
+              </div>
+              {Array.isArray(systemFeed.agencies) && systemFeed.agencies.length > 0 && (
+                <div className="mt-1">
+                  Agencies in this feed: {systemFeed.agencies.map((a) => a.name).join(", ")}
+                </div>
+              )}
+            </>
+          ) : (
+            <span className="text-slate-400">No system-wide feed uploaded</span>
+          )}
+        </div>
       </div>
 
       {error && (
