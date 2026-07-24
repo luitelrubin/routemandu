@@ -26,14 +26,22 @@ INSTALLED_APPS = [
     "templated_email",
     "debug_toolbar",
     "silk",
+    "drf_spectacular",
+    'drf_spectacular_sidecar',
     # Custom
     "users.apps.UsersConfig",
     "ptas.apps.PtasConfig",
     "multigtfs",
     "raptor.apps.RaptorConfig",
+    
 ]
-
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Routemandu API',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+}
 REST_FRAMEWORK = {
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     ),
@@ -130,9 +138,5 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-
-INTERNAL_IPS = [
-    "127.0.0.1",
-]
 
 SILKY_PYTHON_PROFILER = True
