@@ -7,7 +7,7 @@ Date: 2026-05-20
 from pathlib import Path
 from datetime import timedelta
 from decouple import config
-
+from base_settings import *
 # GDAL libraries
 GDAL_LIBRARY_PATH = "C:\\OSGeo4W\\bin\\gdal313"
 PROJ_LIB = "C:\\OSGeo4W\\share\\proj"
@@ -45,6 +45,8 @@ INSTALLED_APPS = [
     "templated_email",
     "debug_toolbar",
     "silk",
+    "drf_spectacular",
+    'drf_spectacular_sidecar',
     # Custom
     "users.apps.UsersConfig",
     "ptas.apps.PtasConfig",
@@ -53,6 +55,7 @@ INSTALLED_APPS = [
 ]
 
 REST_FRAMEWORK = {
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     ),
@@ -191,3 +194,4 @@ INTERNAL_IPS = [
 ]
 
 SILKY_PYTHON_PROFILER = True
+DEBUG_TOOLBAR = True
